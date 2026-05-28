@@ -1,7 +1,7 @@
 console.log("VYAT CONNECT WEBSITE LOADED");
 
 // Hamburger Menu Logic
-document.addEventListener("DOMContentLoaded", () => {
+(function initHamburger() {
   const hamburger = document.getElementById("hamburger");
   const nav = document.querySelector(".navbar nav");
 
@@ -10,10 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
       nav.classList.toggle("active");
     });
   }
-});
+})();
 
-// Inject WhatsApp Floating Button globally akafuna kukufunsa any enqiury
-document.addEventListener("DOMContentLoaded", () => {
+// Inject WhatsApp Floating Button globally
+(function injectWhatsApp() {
+  if (document.querySelector('.whatsapp-float')) return; // Prevent duplicate injection
   const whatsappHtml = `
     <a href="https://wa.me/265994437293" class="whatsapp-float" target="_blank" rel="noopener noreferrer">
       <svg width="35" height="35" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
@@ -23,4 +24,4 @@ document.addEventListener("DOMContentLoaded", () => {
     </a>
   `;
   document.body.insertAdjacentHTML('beforeend', whatsappHtml);
-});
+})();
