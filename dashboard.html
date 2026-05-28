@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - VYAT Connect</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #f7faf7;
+    }
+    .dashboard-container {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+    }
+    .header-bar h2 {
+      color: #0c7a33;
+    }
+    .btn-logout {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-logout:hover {
+      background: #c0392b;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .card h3 {
+      color: #0c7a33;
+      margin-bottom: 15px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+    .btn-submit {
+      width: 100%;
+      background: #0c7a33;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .btn-submit:hover {
+      background: #095925;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table th, table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    table th {
+      background: #f7faf7;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR (Simplified for dashboard) -->
+  <header class="navbar">
+    <div class="logo">
+      <div class="logo-icon">🌿</div>
+      <div>
+        <h1>VYAT</h1>
+        <p>CONNECT</p>
+      </div>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+    </nav>
+    <button class="hamburger" id="hamburger">☰</button>
+  </header>
+
+  <div class="dashboard-container" id="dashboardContent" style="display: none;">
+    
+    <div class="header-bar">
+      <h2>Welcome, <span id="userEmail"></span></h2>
+      <button class="btn-logout" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="grid">
+      <!-- Add Record Form -->
+      <div class="card">
+        <h3>Add Farming Record</h3>
+        <form id="recordForm">
+          <div class="form-group">
+            <label>Crop Type</label>
+            <input type="text" id="cropType" placeholder="e.g. Maize, Groundnuts" required>
+          </div>
+          <div class="form-group">
+            <label>Acres Planted</label>
+            <input type="number" step="0.1" id="acres" placeholder="e.g. 2.5" required>
+          </div>
+          <div class="form-group">
+            <label>Harvest Yield (kg)</label>
+            <input type="number" id="yield" placeholder="e.g. 500" required>
+          </div>
+          <div class="form-group">
+            <label>Date Planted</label>
+            <input type="date" id="datePlanted" required>
+          </div>
+          <button type="submit" class="btn-submit">Save Record</button>
+          <div id="formMessage" style="margin-top: 10px; text-align: center; font-size: 14px;"></div>
+        </form>
+      </div>
+
+      <!-- Records List -->
+      <div class="card">
+        <h3>Your Records</h3>
+        <div style="overflow-x: auto;">
+          <table id="recordsTable">
+            <thead>
+              <tr>
+                <th>Crop</th>
+                <th>Acres</th>
+                <th>Yield (kg)</th>
+                <th>Date Planted</th>
+              </tr>
+            </thead>
+            <tbody id="recordsBody">
+              <tr>
+                <td colspan="4" style="text-align: center;">Loading records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+  
+  <script type="module">
+    import { auth, db, onAuthStateChanged, signOut, collection, addDoc, getDocs, query, where, orderBy } from './firebase-config.js';
+
+    const dashboardContent = document.getElementById("dashboardContent");
+    const userEmailSpan = document.getElementById("userEmail");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const recordForm = document.getElementById("recordForm");
+    const recordsBody = document.getElementById("recordsBody");
+    const formMessage = document.getElementById("formMessage");
+
+    let currentUser = null;
+
+    // Check Authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        userEmailSpan.innerText = user.email;
+        dashboardContent.style.display = "block";
+        loadRecords();
+      } else {
+        // Not logged in, redirect to login page
+        window.location.href = "vyat-login.html";
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", () => {
+      signOut(auth).then(() => {
+        window.location.href = "vyat-login.html";
+      });
+    });
+
+    // Add Record
+    recordForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const cropType = document.getElementById("cropType").value;
+      const acres = document.getElementById("acres").value;
+      const yieldKg = document.getElementById("yield").value;
+      const datePlanted = document.getElementById("datePlanted").value;
+
+      formMessage.style.color = "blue";
+      formMessage.innerText = "Saving...";
+
+      try {
+        await addDoc(collection(db, "farming_records"), {
+          userId: currentUser.uid,
+          cropType: cropType,
+          acres: parseFloat(acres),
+          yieldKg: parseFloat(yieldKg),
+          datePlanted: datePlanted,
+          createdAt: new Date()
+        });
+        
+        formMessage.style.color = "green";
+        formMessage.innerText = "Record added successfully!";
+        recordForm.reset();
+        loadRecords(); // Refresh the table
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        formMessage.style.color = "red";
+        formMessage.innerText = "Error: " + error.message;
+      }
+    });
+
+    // Load Records
+    async function loadRecords() {
+      if (!currentUser) return;
+      
+      try {
+        const q = query(
+          collection(db, "farming_records"), 
+          where("userId", "==", currentUser.uid),
+          orderBy("createdAt", "desc")
+        );
+        
+        const querySnapshot = await getDocs(q);
+        recordsBody.innerHTML = ""; // Clear table body
+        
+        if (querySnapshot.empty) {
+          recordsBody.innerHTML = "<tr><td colspan='4' style='text-align: center;'>No records found. Add one above!</td></tr>";
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${data.cropType}</td>
+            <td>${data.acres}</td>
+            <td>${data.yieldKg}</td>
+            <td>${data.datePlanted}</td>
+          `;
+          recordsBody.appendChild(tr);
+        });
+      } catch (error) {
+        console.error("Error fetching records: ", error);
+        // If index is missing in Firestore, an error will be thrown. Let's catch it nicely.
+        recordsBody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: red;'>Could not load records. Ensure Firestore rules allow reading and indexes are created.</td></tr>";
+      }
+    }
+  </script>
+</body>
+</html>

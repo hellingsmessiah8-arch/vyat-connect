@@ -34,6 +34,7 @@
 
   </nav>
 
+  <button class="hamburger" id="hamburger">?</button>
 </header>
 
 <section class="services">
@@ -42,13 +43,47 @@
 
     <h2>Contact Us</h2>
 
-    <p class="about-text">
-      Edit this page with your contact details.
-    </p>
+    <div class="contact-container">
+      <h3>Partner Application Form</h3>
+      <form action="https://formsubmit.co/hellingsmessiah8@gmail.com" method="POST">
+        <!-- Optional settings for formsubmit -->
+        <input type="hidden" name="_subject" value="New Partner Application from VYAT Connect!">
+        <input type="hidden" name="_next" value="https://vyatconnect.com/contact.html">
+        <input type="hidden" name="_captcha" value="false">
+
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="Name" placeholder="Enter your name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="Phone Number" placeholder="e.g. +265 99 123 4567" required>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="Location" placeholder="Your district or city" required>
+        </div>
+
+        <div class="form-group">
+          <label for="capital">Capital You Have (Amount)</label>
+          <input type="text" id="capital" name="Capital" placeholder="e.g. MK 500,000" required>
+        </div>
+
+        <div class="form-group">
+          <label for="whatYouDo">What do you do?</label>
+          <textarea id="whatYouDo" name="What they do" rows="4" placeholder="Tell us about your agribusiness or plans..." required></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Send Application</button>
+      </form>
+    </div>
 
   </div>
 
 </section>
 
+<script src="script.js"></script>
 </body>
 </html>
